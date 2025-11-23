@@ -1,0 +1,384 @@
+/* =====================================================
+   GLOBAL THEME VARIABLES (Default Values)
+   ===================================================== */
+:root {
+  --bg: #f5f6f8;
+  --text: #0b0d10;
+
+  --glass-bg: rgba(0, 0, 0, 0.04);
+  --glass-border: rgba(0, 0, 0, 0.12);
+
+  --card-bg: rgba(0, 0, 0, 0.05);
+  --card-border: rgba(0, 0, 0, 0.15);
+
+  --subtext: #3c4655;
+  --chip-bg: rgba(0, 0, 0, 0.08);
+
+  --btn-bg: rgba(0, 0, 0, 0.08);
+  --btn-bg-secondary: rgba(0, 0, 0, 0.06);
+  --btn-text: #0b0d10;
+
+  --primary-grad: linear-gradient(95deg, #6ecbff, #b079ff);
+}
+
+/* =====================================================
+   DARK THEME VARIABLES
+   ===================================================== */
+[data-theme="dark"] {
+  --bg: #0b0d10;
+  --text: #e6eef8;
+
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.12);
+
+  --card-bg: rgba(255, 255, 255, 0.08);
+  --card-border: rgba(255, 255, 255, 0.12);
+
+  --subtext: #b8c7db;
+  --chip-bg: rgba(255, 255, 255, 0.18);
+
+  --btn-bg: rgba(255, 255, 255, 0.10);
+  --btn-bg-secondary: rgba(255, 255, 255, 0.06);
+  --btn-text: #e6eef8;
+}
+
+/* =====================================================
+   LIGHT THEME VARIABLES
+   ===================================================== */
+[data-theme="light"] {
+  --bg: #f5f6f8;
+  --text: #0b0d10;
+
+  --glass-bg: rgba(0, 0, 0, 0.04);
+  --glass-border: rgba(0, 0, 0, 0.12);
+
+  --card-bg: rgba(0, 0, 0, 0.05);
+  --card-border: rgba(0, 0, 0, 0.15);
+
+  --subtext: #3c4655;
+  --chip-bg: rgba(0, 0, 0, 0.08);
+
+  --btn-bg: rgba(0, 0, 0, 0.08);
+  --btn-bg-secondary: rgba(0, 0, 0, 0.06);
+  --btn-text: #0b0d10;
+}
+
+/* =====================================================
+   SMOOTH THEME TRANSITIONS
+   ===================================================== */
+.theme-transition * {
+  transition: background-color 0.35s ease,
+              color 0.35s ease,
+              border-color 0.35s ease,
+              box-shadow 0.35s ease,
+              background 0.35s ease;
+}
+
+/* =====================================================
+   GLOBAL RESET
+   ===================================================== */
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+}
+
+/* ROOT APP */
+.app.premium {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =====================================================
+   HEADER
+   ===================================================== */
+.header {
+  backdrop-filter: blur(18px);
+  background: var(--glass-bg);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* =====================================================
+   HERO SECTION
+   ===================================================== */
+.hero {
+  padding: 60px 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.hero-overlay {
+  max-width: 1200px;
+  margin: 0 auto;
+  border-radius: 24px;
+  padding: 32px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(22px) saturate(160%);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+}
+
+.hero-title {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.hero-sub {
+  color: var(--subtext);
+  margin-bottom: 24px;
+}
+
+.hero-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+}
+
+.control {
+  min-width: 150px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: var(--card-bg);
+  color: var(--text);
+  backdrop-filter: blur(16px);
+}
+
+.input-large {
+  flex: 1 1 350px;
+}
+
+/* =====================================================
+   FIXED DROP-DOWNS (MERGED HERE)
+   ===================================================== */
+
+select,
+.control select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--glass-border);
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+}
+
+/* Arrow styling */
+select {
+  background-image: linear-gradient(45deg, transparent 50%, var(--text) 60%),
+                    linear-gradient(135deg, var(--text) 60%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 6px),
+                       calc(100% - 12px) calc(50% + 6px);
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+}
+
+select option {
+  background: var(--bg);
+  color: var(--text);
+}
+
+select:hover {
+  border-color: var(--card-border);
+}
+
+/* =====================================================
+   BUTTONS
+   ===================================================== */
+.btn {
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 0;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-weight: 600;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+}
+
+.btn.secondary,
+.btn.small,
+.btn.tiny,
+.btn.link {
+  background: var(--btn-bg-secondary);
+  color: var(--btn-text);
+}
+
+.btn.primary {
+  background: var(--primary-grad);
+  color: #0b0d10;
+}
+
+.btn.primary:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 28px rgba(145, 216, 255, 0.45);
+}
+
+.btn.big {
+  padding: 16px 24px;
+  font-size: 18px;
+}
+
+/* =====================================================
+   CARDS
+   ===================================================== */
+.cards-grid {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+}
+
+.card {
+  border-radius: 20px;
+  padding: 18px;
+  background: var(--card-bg);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--card-border);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+.card-title-large {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.card-sub {
+  margin-top: 6px;
+  color: var(--subtext);
+}
+
+.card-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chip {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 50px;
+  background: var(--chip-bg);
+  border: 1px solid var(--glass-border);
+}
+
+.rating {
+  background: #ffdf6b;
+  color: #1f1813;
+  padding: 6px 10px;
+  border-radius: 12px;
+}
+
+/* Hover Trailer Preview */
+.hover-preview-iframe {
+  position: absolute;
+  top: -120px;
+  right: -20px;
+  width: 240px;
+  height: 140px;
+  border-radius: 14px;
+  overflow: hidden;
+  display: none;
+}
+
+.card:hover .hover-preview-iframe {
+  display: block;
+}
+
+.hover-preview-iframe iframe {
+  width: 100%;
+  height: 100%;
+}
+
+/* =====================================================
+   SKELETON LOADING
+   ===================================================== */
+.card-skel {
+  height: 140px;
+  border-radius: 18px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.12));
+  animation: skel 1.5s infinite alternate;
+}
+
+@keyframes skel {
+  from { opacity: .4; }
+  to { opacity: .9; }
+}
+
+/* =====================================================
+   MODAL
+   ===================================================== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  width: min(900px, 95%);
+  height: min(520px, 80%);
+  border-radius: 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(18px);
+  padding: 14px;
+}
+
+.modal iframe {
+  border-radius: 18px;
+  width: 100%;
+  height: 100%;
+}
+
+/* =====================================================
+   FOOTER
+   ===================================================== */
+.footer {
+  text-align: center;
+  padding: 18px;
+  color: var(--subtext);
+  background: var(--glass-bg);
+}
+
+
