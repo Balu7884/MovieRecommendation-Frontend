@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "../App.css";
 
 const USER_ID_KEY = "movie_ai_user_id";

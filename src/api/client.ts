@@ -1,5 +1,5 @@
 // src/api/client.ts
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080/api";
+const API_BASE = import.meta.env.VITE_API_BASE || "https://movierecommendation-backed-1.onrender.com/api";
 
 export interface MovieRecommendation {
   id?: number;

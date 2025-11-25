@@ -1,15 +1,15 @@
 // src/App.tsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
+import { useCallback, useMemo } from "react";
 import "./App.css";
 
-/**
- * Hero image path from conversation upload (developer-provided).
- * Keep this exact path if your environment will transform it to a public URL.
- */
+/** Hero image */
 const HERO_IMG = "/mnt/data/Screenshot 2025-11-23 004723.png";
 
 /** API base (Vite env or fallback) */
-const API_BASE = (import.meta as any).env?.VITE_API_BASE || "http://localhost:8080/api";
+const API_BASE =
+  (import.meta as any).env?.VITE_API_BASE ||
+  "http://localhost:8080/api";
 
 type MovieRecommendation = {
   id?: number;
@@ -22,26 +22,14 @@ type MovieRecommendation = {
   rating?: number;
 };
 
-function toggleTheme() {
-  document.documentElement.classList.add("theme-transition");
-
-  setTheme((t) => (t === "dark" ? "light" : "dark"));
-
-  setTimeout(() => {
-    document.documentElement.classList.remove("theme-transition");
-  }, 400);
-}
-
-
 /* ---------------- helpers ---------------- */
 
 const USER_ID_KEY = "movie_ai_user_id_v2";
+
 function getOrCreateUserId(): string {
   let id = localStorage.getItem(USER_ID_KEY);
   if (!id) {
     try {
-      // safe cross-browser UUID fallback
-      // @ts-ignore
       id =
         typeof crypto !== "undefined" && typeof (crypto as any).randomUUID === "function"
           ? (crypto as any).randomUUID()
@@ -49,12 +37,12 @@ function getOrCreateUserId(): string {
     } catch {
       id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     }
-    localStorage.setItem(USER_ID_KEY, id);
+    localStorage.setItem(USER_ID_KEY, id!);
   }
   return id!;
 }
 
-/* Small heuristic mood detection */
+/* Detect mood using keywords */
 function detectMoodFromText(text: string) {
   const t = (text || "").toLowerCase();
   if (!t) return "";
@@ -66,7 +54,7 @@ function detectMoodFromText(text: string) {
   return "";
 }
 
-/* Safe POST wrapper for recommendations */
+/* POST wrapper */
 async function postRecommendations(payload: {
   userExternalId: string;
   message: string;
@@ -81,34 +69,40 @@ async function postRecommendations(payload: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
     throw new Error(`Failed to fetch recommendations (${res.status}): ${txt}`);
   }
+
   return (await res.json()) as MovieRecommendation[];
 }
 
-/* Extract youtube id from URLs or return null */
-function extractYouTubeId(url: string | undefined | null): string | null {
+/* Extract YouTube video ID */
+function extractYouTubeId(url: string | null | undefined): string | null {
   if (!url) return null;
+
   try {
     const u = new URL(url);
+
     if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+
     if (u.hostname.includes("youtube")) {
       const v = u.searchParams.get("v");
       if (v) return v;
+
       const parts = u.pathname.split("/").filter(Boolean);
       return parts[parts.length - 1] || null;
     }
   } catch {
-    // try naive regex fallback
-    const m = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:\b|&|$)/);
-    return m ? m[1] : null;
+    const match = url.match(/(?:v=|\/)([0-9A-Za-z_-]{11})(?:\b|&|$)/);
+    return match ? match[1] : null;
   }
+
   return null;
 }
 
-/* ---------------- small UI components ---------------- */
+/* Small UI Components */
 
 function TypingIndicator({ visible = false }: { visible?: boolean }) {
   return (
@@ -139,6 +133,7 @@ function TrailerModal({
 }) {
   useEffect(() => {
     if (!open) return;
+
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
     }
@@ -147,6 +142,7 @@ function TrailerModal({
   }, [open, onClose]);
 
   if (!open) return null;
+
   const embedSrc = videoId
     ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`
     : `https://www.youtube.com/results?search_query=${encodeURIComponent(fallbackQuery || title || "trailer")}`;
@@ -154,9 +150,10 @@ function TrailerModal({
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
       <div className="modal">
-        <button type="button" className="modal-close" onClick={onClose} aria-label="Close">
+        <button type="button" className="modal-close" onClick={onClose}>
           ×
         </button>
+
         {videoId ? (
           <iframe
             title={title || "trailer"}
@@ -166,7 +163,13 @@ function TrailerModal({
           />
         ) : (
           <div className="modal-fallback">
-            <a className="btn primary" href={embedSrc} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
+            <a
+              className="btn primary"
+              href={embedSrc}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => e.stopPropagation()}
+            >
               Open YouTube results for “{fallbackQuery || title}”
             </a>
           </div>
@@ -176,10 +179,11 @@ function TrailerModal({
   );
 }
 
-/* HoverPreview: muted looping youtube iframe when available */
 function HoverPreview({ videoId }: { videoId?: string | null }) {
   if (!videoId) return null;
+
   const src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&controls=0&loop=1&rel=0&playlist=${videoId}`;
+
   return (
     <div className="hover-preview-iframe" aria-hidden>
       <iframe title="preview" src={src} frameBorder={0} />
@@ -187,10 +191,11 @@ function HoverPreview({ videoId }: { videoId?: string | null }) {
   );
 }
 
-/* ----------------- Main App ----------------- */
+/* ---------------- MAIN APP ---------------- */
 
-export default function App(): JSX.Element {
+export default function App() {
   const userId = useMemo(() => getOrCreateUserId(), []);
+
   const years = useMemo(() => {
     const arr: number[] = [];
     const end = new Date().getFullYear();
@@ -198,8 +203,11 @@ export default function App(): JSX.Element {
     return arr;
   }, []);
 
-  // Controls / state
-  const [theme, setTheme] = useState<"dark" | "light">(() => (localStorage.getItem("theme") as "dark" | "light") || "dark");
+  /* States */
+  const [theme, setTheme] = useState<"dark" | "light">(
+    () => (localStorage.getItem("theme") as "dark" | "light") || "dark"
+  );
+
   const [input, setInput] = useState("");
   const [genre, setGenre] = useState("");
   const [mood, setMood] = useState("");
@@ -209,6 +217,7 @@ export default function App(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const [typing, setTyping] = useState(false);
   const [page, setPage] = useState(1);
+
   const [favorites, setFavorites] = useState<MovieRecommendation[]>(() => {
     try {
       return JSON.parse(localStorage.getItem("favorites:v1") || "[]");
@@ -217,32 +226,31 @@ export default function App(): JSX.Element {
     }
   });
 
-  // trailer modal
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [trailerVideoId, setTrailerVideoId] = useState<string | null>(null);
-  const [trailerTitle, setTrailerTitle] = useState<string | undefined>(undefined);
+  const [trailerTitle, setTrailerTitle] = useState<string | undefined>();
 
-  // readability: keep canAsk computed
   const canAsk = input.trim().length > 0 || genre || mood || yearFrom || yearTo;
 
-  // persist theme & favorites
+  /* Persist theme */
   useEffect(() => {
     localStorage.setItem("theme", theme);
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
+  /* Persist favorites */
   useEffect(() => {
     localStorage.setItem("favorites:v1", JSON.stringify(favorites));
   }, [favorites]);
 
-  // stable ask function
+  /* Ask AI */
   const askAI = useCallback(
     async (pageRequested = 1) => {
       if (!canAsk) return;
+
       setTyping(true);
       setLoading(true);
 
-      // small typing animation
       setTimeout(() => setTyping(false), 800);
 
       const message =
@@ -260,11 +268,9 @@ export default function App(): JSX.Element {
           page: pageRequested,
         });
 
-        if (pageRequested === 1) {
-          setMovies(recs);
-        } else {
-          setMovies((prev) => [...prev, ...recs]);
-        }
+        if (pageRequested === 1) setMovies(recs);
+        else setMovies((prev) => [...prev, ...recs]);
+
         setPage(pageRequested);
       } catch (err: any) {
         console.error("Failed to fetch recommendations", err);
@@ -278,18 +284,17 @@ export default function App(): JSX.Element {
     [canAsk, input, genre, mood, yearFrom, yearTo, userId]
   );
 
-  // open trailer modal for a movie (prefer previewUrl)
+  /* Trailer modal */
   function openTrailerForMovie(m: MovieRecommendation) {
-    const preview = m.previewUrl || "";
-    const vid = extractYouTubeId(preview);
+    const vid = extractYouTubeId(m.previewUrl || "");
     setTrailerTitle(m.title);
     setTrailerVideoId(vid);
     setTrailerOpen(true);
   }
 
   function openTrailerSearch(title: string) {
-    const q = encodeURIComponent(`${title} trailer`);
-    window.open(`https://www.youtube.com/results?search_query=${q}`, "_blank");
+    const q = `${title} trailer`;
+    window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`, "_blank");
   }
 
   function toggleFavorite(m: MovieRecommendation) {
@@ -300,21 +305,22 @@ export default function App(): JSX.Element {
     });
   }
 
-  // UI: toggle theme
+  /* Theme toggle */
   function toggleTheme() {
     setTheme((t) => (t === "dark" ? "light" : "dark"));
   }
 
+  /* ---- UI ---- */
   return (
     <div className={`app premium-ui ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
       <header className="header">
         <div className="header-inner">
           <div className="brand">MoodFlix</div>
           <div className="header-actions">
-            <button type="button" className="btn small" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            <button className="btn small" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
               Top
             </button>
-            <button type="button" className="btn small" onClick={toggleTheme}>
+            <button className="btn small" onClick={toggleTheme}>
               {theme === "dark" ? "🌙 Dark" : "☀️ Light"}
             </button>
           </div>
@@ -325,18 +331,17 @@ export default function App(): JSX.Element {
         <div className="hero-overlay">
           <div className="hero-left">
             <h1 className="hero-title">Find the perfect movie for your mood</h1>
-            <p className="hero-sub">Premium curated recommendations powered by AI — click a card to play trailers.</p>
+            <p className="hero-sub">AI-powered personalized recommendations with instant trailers.</p>
 
             <div className="hero-controls">
               <input
                 className="control input-large"
-                placeholder="Describe what you want (optional)"
+                placeholder="Describe what you want..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                aria-label="Describe what you want"
               />
 
-              <select className="control" value={genre} onChange={(e) => setGenre(e.target.value)} aria-label="Genre">
+              <select className="control" value={genre} onChange={(e) => setGenre(e.target.value)}>
                 <option value="">Any genre</option>
                 <option>Action</option>
                 <option>Comedy</option>
@@ -345,10 +350,10 @@ export default function App(): JSX.Element {
                 <option>Sci-Fi</option>
                 <option>Drama</option>
                 <option>Thriller</option>
-                <option>Anime</option> {/* ADDED Anime */}
+                <option>Anime</option>
               </select>
 
-              <select className="control" value={mood} onChange={(e) => setMood(e.target.value)} aria-label="Mood">
+              <select className="control" value={mood} onChange={(e) => setMood(e.target.value)}>
                 <option value="">Any mood</option>
                 <option>cozy</option>
                 <option>exciting</option>
@@ -359,7 +364,7 @@ export default function App(): JSX.Element {
                 <option>romantic</option>
               </select>
 
-              <select className="control" value={yearFrom} onChange={(e) => setYearFrom(e.target.value ? Number(e.target.value) : "")} aria-label="Year from">
+              <select className="control" value={yearFrom} onChange={(e) => setYearFrom(e.target.value ? Number(e.target.value) : "")}>
                 <option value="">From</option>
                 {years.map((y) => (
                   <option key={y} value={y}>
@@ -368,7 +373,7 @@ export default function App(): JSX.Element {
                 ))}
               </select>
 
-              <select className="control" value={yearTo} onChange={(e) => setYearTo(e.target.value ? Number(e.target.value) : "")} aria-label="Year to">
+              <select className="control" value={yearTo} onChange={(e) => setYearTo(e.target.value ? Number(e.target.value) : "")}>
                 <option value="">To</option>
                 {years.map((y) => (
                   <option key={y} value={y}>
@@ -378,12 +383,11 @@ export default function App(): JSX.Element {
               </select>
 
               <div className="hero-buttons">
-                <button type="button" className="btn primary big" onClick={() => askAI(1)} disabled={!canAsk || loading}>
+                <button className="btn primary big" onClick={() => askAI(1)} disabled={!canAsk || loading}>
                   {loading ? "Thinking..." : "Ask AI"}
                 </button>
 
                 <button
-                  type="button"
                   className="btn secondary big"
                   onClick={() => {
                     setInput("");
@@ -399,7 +403,9 @@ export default function App(): JSX.Element {
 
               <div className="hero-hint">
                 <TypingIndicator visible={typing} />
-                <span className="hint-text">Tip: click a card for trailer or details. You don't need to type — dropdowns work too.</span>
+                <span className="hint-text">
+                  Tip: You don't need to type — genre & mood dropdowns work too!
+                </span>
               </div>
             </div>
           </div>
@@ -413,17 +419,25 @@ export default function App(): JSX.Element {
                 <ul>
                   {favorites.slice(0, 6).map((f, i) => (
                     <li key={i}>
-                      <strong>{f.title}</strong> <span className="muted">({f.year})</span>
+                      <strong>{f.title}</strong>{" "}
+                      <span className="muted">({f.year})</span>
                     </li>
                   ))}
                 </ul>
               )}
 
               <div className="fav-actions">
-                <button type="button" className="btn tiny" onClick={() => { localStorage.removeItem("favorites:v1"); setFavorites([]); }}>
+                <button
+                  className="btn tiny"
+                  onClick={() => {
+                    localStorage.removeItem("favorites:v1");
+                    setFavorites([]);
+                  }}
+                >
                   Clear
                 </button>
-                <button type="button" className="btn tiny" onClick={() => alert("Cloud save not implemented — will add later.")}>
+
+                <button className="btn tiny" onClick={() => alert("Cloud sync coming soon!")}>
                   Save (cloud)
                 </button>
               </div>
@@ -432,6 +446,7 @@ export default function App(): JSX.Element {
         </div>
       </section>
 
+      {/* ---- Recommendations ---- */}
       <main className="content">
         <div className="container">
           <h2 className="section-title">Recommendations</h2>
@@ -445,62 +460,66 @@ export default function App(): JSX.Element {
           )}
 
           {!loading && movies.length === 0 && (
-            <div className="empty big">No recommendations yet — try the controls above and press <strong>Ask AI</strong>.</div>
+            <div className="empty big">
+              No recommendations yet — try selecting genre/mood and tapping <b>Ask AI</b>.
+            </div>
           )}
 
-          {!loading && movies.length > 0 && (
+          {!!movies.length && (
             <div className="cards-grid">
               {movies.map((m, idx) => {
                 const ytId = extractYouTubeId(m.previewUrl || "");
                 const isFav = favorites.some((f) => f.title === m.title && f.year === m.year);
+
                 return (
                   <article
                     key={`${m.title}-${idx}`}
                     className="card premium-card"
                     onClick={() => openTrailerForMovie(m)}
-                    onKeyDown={(e) => { if (e.key === "Enter") openTrailerForMovie(m); }}
                     tabIndex={0}
-                    role="button"
-                    aria-pressed={isFav}
                   >
                     <div className="card-body-no-poster">
                       <div className="card-left">
                         <div className="card-title-large">{m.title}</div>
-                        <div className="card-sub muted">{m.year} • {m.genre}</div>
+                        <div className="card-sub muted">
+                          {m.year} • {m.genre}
+                        </div>
                         <div className="card-meta">
                           {m.moodTag && <Chip>{m.moodTag}</Chip>}
-                          {typeof m.rating === "number" && <span className="rating">★ {m.rating.toFixed(1)}</span>}
+                          {typeof m.rating === "number" && (
+                            <span className="rating">★ {m.rating.toFixed(1)}</span>
+                          )}
                         </div>
                       </div>
 
                       <div className="card-right">
                         <div className="card-actions-vertical">
                           <button
-                            type="button"
                             className="btn tiny"
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (ytId) {
-                                // open modal with extracted id
-                                setTrailerVideoId(ytId);
-                                setTrailerTitle(m.title);
-                                setTrailerOpen(true);
-                              } else openTrailerSearch(m.title);
+                              ytId ? openTrailerForMovie(m) : openTrailerSearch(m.title);
                             }}
                           >
                             Play Trailer
                           </button>
 
                           <button
-                            type="button"
                             className="btn link"
-                            onClick={(e) => { e.stopPropagation(); window.open(`https://www.google.com/search?q=${encodeURIComponent(m.title + " movie")}`, "_blank"); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(
+                                `https://www.google.com/search?q=${encodeURIComponent(
+                                  m.title + " movie"
+                                )}`,
+                                "_blank"
+                              );
+                            }}
                           >
                             Details
                           </button>
 
                           <button
-                            type="button"
                             className="btn tiny"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -513,6 +532,7 @@ export default function App(): JSX.Element {
                       </div>
                     </div>
 
+                    {/* Hover preview */}
                     <div className="hover-area" aria-hidden>
                       <HoverPreview videoId={extractYouTubeId(m.previewUrl || "")} />
                     </div>
@@ -522,16 +542,13 @@ export default function App(): JSX.Element {
             </div>
           )}
 
-          <div className="more-actions">
-            <button
-              type="button"
-              className="btn primary"
-              onClick={() => askAI(page + 1)}
-              disabled={loading}
-            >
-              Load more
-            </button>
-          </div>
+          {!!movies.length && (
+            <div className="more-actions">
+              <button className="btn primary" disabled={loading} onClick={() => askAI(page + 1)}>
+                Load more
+              </button>
+            </div>
+          )}
         </div>
       </main>
 
@@ -543,13 +560,10 @@ export default function App(): JSX.Element {
         onClose={() => setTrailerOpen(false)}
       />
 
-      <footer className="footer premium">Built with Spring Boot • Gemini • MoodFlix (Premium)</footer>
+      <footer className="footer premium">
+        Built with ❤️ Using Spring Boot • Gemini API • MoodFlix
+      </footer>
     </div>
   );
-
-}
-
-function setTheme(arg0: (t: any) => "dark" | "light") {
-  throw new Error("Function not implemented.");
 }
 
