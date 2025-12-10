@@ -9,7 +9,7 @@ const HERO_IMG = "/mnt/data/Screenshot 2025-11-23 004723.png";
 /** API base (Vite env or fallback) */
 const API_BASE =
   (import.meta as any).env?.VITE_API_BASE ||
-  "http://localhost:8080/api";
+  "https://movierecommendation-backed-1.onrender.com/api";
 
 type MovieRecommendation = {
   id?: number;
@@ -148,9 +148,9 @@ function TrailerModal({
     : `https://www.youtube.com/results?search_query=${encodeURIComponent(fallbackQuery || title || "trailer")}`;
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
+    <div id="trailer-modal" className="modal-backdrop" role="dialog" aria-modal="true">
       <div className="modal">
-        <button type="button" className="modal-close" onClick={onClose}>
+        <button id="btn-close-modal" type="button" className="modal-close" onClick={onClose}>
           ×
         </button>
 
@@ -164,6 +164,7 @@ function TrailerModal({
         ) : (
           <div className="modal-fallback">
             <a
+              id="btn-open-youtube"
               className="btn primary"
               href={embedSrc}
               target="_blank"
@@ -312,36 +313,41 @@ export default function App() {
 
   /* ---- UI ---- */
   return (
-    <div className={`app premium-ui ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
-      <header className="header">
+    <div id="app-root" className={`app premium-ui ${theme === "dark" ? "theme-dark" : "theme-light"}`}>
+      
+      {/* Header */}
+      <header id="header" className="header">
         <div className="header-inner">
-          <div className="brand">MoodFlix</div>
+          <div id="brand" className="brand">MoodFlix</div>
           <div className="header-actions">
-            <button className="btn small" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            <button id="btn-scroll-top" className="btn small" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
               Top
             </button>
-            <button className="btn small" onClick={toggleTheme}>
+            <button id="btn-toggle-theme" className="btn small" onClick={toggleTheme}>
               {theme === "dark" ? "🌙 Dark" : "☀️ Light"}
             </button>
           </div>
         </div>
       </header>
 
-      <section className="hero" style={{ backgroundImage: `url("${HERO_IMG}")` }}>
+      {/* Hero */}
+      <section id="hero-section" className="hero" style={{ backgroundImage: `url("${HERO_IMG}")` }}>
         <div className="hero-overlay">
           <div className="hero-left">
-            <h1 className="hero-title">Find the perfect movie for your mood</h1>
-            <p className="hero-sub">AI-powered personalized recommendations with instant trailers.</p>
+            <h1 id="hero-title" className="hero-title">Find the perfect movie for your mood</h1>
+            <p id="hero-subtitle" className="hero-sub">AI-powered personalized recommendations with instant trailers.</p>
 
             <div className="hero-controls">
+
               <input
+                id="input-description"
                 className="control input-large"
                 placeholder="Describe what you want..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
               />
 
-              <select className="control" value={genre} onChange={(e) => setGenre(e.target.value)}>
+              <select id="select-genre" className="control" value={genre} onChange={(e) => setGenre(e.target.value)}>
                 <option value="">Any genre</option>
                 <option>Action</option>
                 <option>Comedy</option>
@@ -353,7 +359,7 @@ export default function App() {
                 <option>Anime</option>
               </select>
 
-              <select className="control" value={mood} onChange={(e) => setMood(e.target.value)}>
+              <select id="select-mood" className="control" value={mood} onChange={(e) => setMood(e.target.value)}>
                 <option value="">Any mood</option>
                 <option>cozy</option>
                 <option>exciting</option>
@@ -364,31 +370,26 @@ export default function App() {
                 <option>romantic</option>
               </select>
 
-              <select className="control" value={yearFrom} onChange={(e) => setYearFrom(e.target.value ? Number(e.target.value) : "")}>
+              <select id="select-year-from" className="control" value={yearFrom} onChange={(e) => setYearFrom(e.target.value ? Number(e.target.value) : "")}>
                 <option value="">From</option>
                 {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
+                  <option key={y} value={y}>{y}</option>
                 ))}
               </select>
 
-              <select className="control" value={yearTo} onChange={(e) => setYearTo(e.target.value ? Number(e.target.value) : "")}>
+              <select id="select-year-to" className="control" value={yearTo} onChange={(e) => setYearTo(e.target.value ? Number(e.target.value) : "")}>
                 <option value="">To</option>
                 {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
+                  <option key={y} value={y}>{y}</option>
                 ))}
               </select>
 
               <div className="hero-buttons">
-                <button className="btn primary big" onClick={() => askAI(1)} disabled={!canAsk || loading}>
+                <button id="btn-ask-ai" className="btn primary big" onClick={() => askAI(1)} disabled={!canAsk || loading}>
                   {loading ? "Thinking..." : "Ask AI"}
                 </button>
 
-                <button
-                  className="btn secondary big"
+                <button id="btn-reset-filters" className="btn secondary big"
                   onClick={() => {
                     setInput("");
                     setGenre("");
@@ -403,16 +404,19 @@ export default function App() {
 
               <div className="hero-hint">
                 <TypingIndicator visible={typing} />
-                <span className="hint-text">
+                <span id="hint-text" className="hint-text">
                   Tip: You don't need to type — genre & mood dropdowns work too!
                 </span>
               </div>
+
             </div>
           </div>
 
+          {/* Favorites */}
           <div className="hero-right">
-            <div className="favorites-card">
+            <div id="favorites-card" className="favorites-card">
               <h4>Your favorites</h4>
+
               {favorites.length === 0 ? (
                 <div className="fav-empty">No favorites yet</div>
               ) : (
@@ -427,8 +431,7 @@ export default function App() {
               )}
 
               <div className="fav-actions">
-                <button
-                  className="btn tiny"
+                <button id="btn-clear-favorites" className="btn tiny"
                   onClick={() => {
                     localStorage.removeItem("favorites:v1");
                     setFavorites([]);
@@ -437,19 +440,22 @@ export default function App() {
                   Clear
                 </button>
 
-                <button className="btn tiny" onClick={() => alert("Cloud sync coming soon!")}>
+                <button id="btn-save-cloud" className="btn tiny"
+                  onClick={() => alert("Cloud sync coming soon!")}
+                >
                   Save (cloud)
                 </button>
               </div>
             </div>
           </div>
+
         </div>
       </section>
 
       {/* ---- Recommendations ---- */}
-      <main className="content">
+      <main id="main-content" className="content">
         <div className="container">
-          <h2 className="section-title">Recommendations</h2>
+          <h2 id="recommendations-title" className="section-title">Recommendations</h2>
 
           {loading && (
             <div className="cards-grid skeleton">
@@ -460,19 +466,20 @@ export default function App() {
           )}
 
           {!loading && movies.length === 0 && (
-            <div className="empty big">
+            <div id="empty-state" className="empty big">
               No recommendations yet — try selecting genre/mood and tapping <b>Ask AI</b>.
             </div>
           )}
 
           {!!movies.length && (
-            <div className="cards-grid">
+            <div id="cards-grid" className="cards-grid">
               {movies.map((m, idx) => {
                 const ytId = extractYouTubeId(m.previewUrl || "");
                 const isFav = favorites.some((f) => f.title === m.title && f.year === m.year);
 
                 return (
                   <article
+                    id={`movie-card-${idx}`}
                     key={`${m.title}-${idx}`}
                     className="card premium-card"
                     onClick={() => openTrailerForMovie(m)}
@@ -481,9 +488,7 @@ export default function App() {
                     <div className="card-body-no-poster">
                       <div className="card-left">
                         <div className="card-title-large">{m.title}</div>
-                        <div className="card-sub muted">
-                          {m.year} • {m.genre}
-                        </div>
+                        <div className="card-sub muted">{m.year} • {m.genre}</div>
                         <div className="card-meta">
                           {m.moodTag && <Chip>{m.moodTag}</Chip>}
                           {typeof m.rating === "number" && (
@@ -494,7 +499,9 @@ export default function App() {
 
                       <div className="card-right">
                         <div className="card-actions-vertical">
+                          
                           <button
+                            id={`btn-play-trailer-${idx}`}
                             className="btn tiny"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -505,6 +512,7 @@ export default function App() {
                           </button>
 
                           <button
+                            id={`btn-details-${idx}`}
                             className="btn link"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -520,6 +528,7 @@ export default function App() {
                           </button>
 
                           <button
+                            id={`btn-favorite-${idx}`}
                             className="btn tiny"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -528,13 +537,14 @@ export default function App() {
                           >
                             {isFav ? "♥ Saved" : "♡ Save"}
                           </button>
+
                         </div>
                       </div>
                     </div>
 
                     {/* Hover preview */}
                     <div className="hover-area" aria-hidden>
-                      <HoverPreview videoId={extractYouTubeId(m.previewUrl || "")} />
+                      <HoverPreview videoId={ytId} />
                     </div>
                   </article>
                 );
@@ -543,8 +553,8 @@ export default function App() {
           )}
 
           {!!movies.length && (
-            <div className="more-actions">
-              <button className="btn primary" disabled={loading} onClick={() => askAI(page + 1)}>
+            <div id="more-actions" className="more-actions">
+              <button id="btn-load-more" className="btn primary" disabled={loading} onClick={() => askAI(page + 1)}>
                 Load more
               </button>
             </div>
@@ -560,7 +570,7 @@ export default function App() {
         onClose={() => setTrailerOpen(false)}
       />
 
-      <footer className="footer premium">
+      <footer id="footer" className="footer premium">
         Built with ❤️ Using Spring Boot • Gemini API • MoodFlix
       </footer>
     </div>
