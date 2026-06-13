@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { MovieRecommendation } from "../api/client";
 import "../App.css";
 
@@ -14,11 +14,7 @@ export default function HistoryPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadPage(page);
-  }, [page]);
-
-  async function loadPage(p: number) {
+  const loadPage = useCallback(async (p: number) => {
     setLoading(true);
     try {
       const res = await fetch(
@@ -34,7 +30,11 @@ export default function HistoryPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [userId]);
+
+  useEffect(() => {
+    loadPage(page);
+  }, [loadPage, page]);
 
   return (
     <div className="page history-page">
@@ -54,10 +54,10 @@ export default function HistoryPage() {
                 <div className="card-body">
                   <div className="card-title">{m.title}</div>
                   <div className="card-sub">
-                    {m.year} • {m.genre}
+                    {m.year} / {m.genre}
                   </div>
                   {m.rating && (
-                    <div className="rating">★ {m.rating.toFixed(1)}</div>
+                    <div className="rating">Rating {m.rating.toFixed(1)}</div>
                   )}
                 </div>
               </div>

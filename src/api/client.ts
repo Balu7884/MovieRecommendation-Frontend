@@ -34,7 +34,9 @@ export async function getRecommendations(
     let text = "";
     try {
       text = await res.text();
-    } catch {}
+    } catch {
+      text = "";
+    }
     throw new Error(`Failed to fetch recommendations (${res.status}): ${text}`);
   }
 

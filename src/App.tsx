@@ -1,14 +1,11 @@
-// src/App.tsx
-import { useEffect, useState } from "react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
 
-/** Hero image */
-const HERO_IMG = "/mnt/data/Screenshot 2025-11-23 004723.png";
+const HERO_IMG = "/HollyWood.jpg";
 
 /** API base (Vite env or fallback) */
 const API_BASE =
-  (import.meta as any).env?.VITE_API_BASE ||
+  import.meta.env.VITE_API_BASE ||
   "https://movierecommendation-backed-1.onrender.com/api";
 
 type MovieRecommendation = {
@@ -22,7 +19,8 @@ type MovieRecommendation = {
   rating?: number;
 };
 
-/* ---------------- helpers ---------------- */
+const GENRES = ["Action", "Comedy", "Romance", "Horror", "Sci-Fi", "Drama", "Thriller", "Anime"];
+const MOODS = ["cozy", "exciting", "sad", "uplifting", "scary", "nostalgic", "romantic"];
 
 const USER_ID_KEY = "movie_ai_user_id_v2";
 
@@ -31,8 +29,8 @@ function getOrCreateUserId(): string {
   if (!id) {
     try {
       id =
-        typeof crypto !== "undefined" && typeof (crypto as any).randomUUID === "function"
-          ? (crypto as any).randomUUID()
+        typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
           : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     } catch {
       id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -151,7 +149,7 @@ function TrailerModal({
     <div id="trailer-modal" className="modal-backdrop" role="dialog" aria-modal="true">
       <div className="modal">
         <button id="btn-close-modal" type="button" className="modal-close" onClick={onClose}>
-          ×
+          Close
         </button>
 
         {videoId ? (
@@ -171,7 +169,7 @@ function TrailerModal({
               rel="noreferrer"
               onClick={(e) => e.stopPropagation()}
             >
-              Open YouTube results for “{fallbackQuery || title}”
+              Open YouTube results for "{fallbackQuery || title}"
             </a>
           </div>
         )}
@@ -231,7 +229,10 @@ export default function App() {
   const [trailerVideoId, setTrailerVideoId] = useState<string | null>(null);
   const [trailerTitle, setTrailerTitle] = useState<string | undefined>();
 
-  const canAsk = input.trim().length > 0 || genre || mood || yearFrom || yearTo;
+  const yearRangeError =
+    typeof yearFrom === "number" && typeof yearTo === "number" && yearFrom > yearTo;
+  const hasPrompt = Boolean(input.trim().length > 0 || genre || mood || yearFrom || yearTo);
+  const canAsk = hasPrompt && !yearRangeError;
 
   /* Persist theme */
   useEffect(() => {
@@ -273,9 +274,10 @@ export default function App() {
         else setMovies((prev) => [...prev, ...recs]);
 
         setPage(pageRequested);
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to fetch recommendations";
         console.error("Failed to fetch recommendations", err);
-        alert(err?.message ?? "Failed to fetch recommendations");
+        alert(message);
       } finally {
         setLoading(false);
         setTyping(false);
@@ -318,13 +320,16 @@ export default function App() {
       {/* Header */}
       <header id="header" className="header">
         <div className="header-inner">
-          <div id="brand" className="brand">MoodFlix</div>
+          <div id="brand" className="brand">
+            <span className="brand-mark">M</span>
+            <span>MoodFlix</span>
+          </div>
           <div className="header-actions">
             <button id="btn-scroll-top" className="btn small" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
               Top
             </button>
             <button id="btn-toggle-theme" className="btn small" onClick={toggleTheme}>
-              {theme === "dark" ? "🌙 Dark" : "☀️ Light"}
+              {theme === "dark" ? "Dark" : "Light"}
             </button>
           </div>
         </div>
@@ -334,40 +339,37 @@ export default function App() {
       <section id="hero-section" className="hero" style={{ backgroundImage: `url("${HERO_IMG}")` }}>
         <div className="hero-overlay">
           <div className="hero-left">
+            <div className="hero-kicker">Personal AI cinema picker</div>
             <h1 id="hero-title" className="hero-title">Find the perfect movie for your mood</h1>
-            <p id="hero-subtitle" className="hero-sub">AI-powered personalized recommendations with instant trailers.</p>
+            <p id="hero-subtitle" className="hero-sub">
+              Blend a vibe, genre, and time period into polished recommendations with instant trailer actions.
+            </p>
 
             <div className="hero-controls">
 
               <input
                 id="input-description"
                 className="control input-large"
-                placeholder="Describe what you want..."
+                placeholder="Describe your movie mood..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && canAsk && !loading) askAI(1);
+                }}
               />
 
               <select id="select-genre" className="control" value={genre} onChange={(e) => setGenre(e.target.value)}>
                 <option value="">Any genre</option>
-                <option>Action</option>
-                <option>Comedy</option>
-                <option>Romance</option>
-                <option>Horror</option>
-                <option>Sci-Fi</option>
-                <option>Drama</option>
-                <option>Thriller</option>
-                <option>Anime</option>
+                {GENRES.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
               </select>
 
               <select id="select-mood" className="control" value={mood} onChange={(e) => setMood(e.target.value)}>
                 <option value="">Any mood</option>
-                <option>cozy</option>
-                <option>exciting</option>
-                <option>sad</option>
-                <option>uplifting</option>
-                <option>scary</option>
-                <option>nostalgic</option>
-                <option>romantic</option>
+                {MOODS.map((item) => (
+                  <option key={item}>{item}</option>
+                ))}
               </select>
 
               <select id="select-year-from" className="control" value={yearFrom} onChange={(e) => setYearFrom(e.target.value ? Number(e.target.value) : "")}>
@@ -405,7 +407,9 @@ export default function App() {
               <div className="hero-hint">
                 <TypingIndicator visible={typing} />
                 <span id="hint-text" className="hint-text">
-                  Tip: You don't need to type — genre & mood dropdowns work too!
+                  {yearRangeError
+                    ? "Pick a From year that is earlier than the To year."
+                    : "Genre and mood dropdowns work even without a typed prompt."}
                 </span>
               </div>
 
@@ -415,7 +419,7 @@ export default function App() {
           {/* Favorites */}
           <div className="hero-right">
             <div id="favorites-card" className="favorites-card">
-              <h4>Your favorites</h4>
+              <div className="panel-title">Your favorites</div>
 
               {favorites.length === 0 ? (
                 <div className="fav-empty">No favorites yet</div>
@@ -455,7 +459,15 @@ export default function App() {
       {/* ---- Recommendations ---- */}
       <main id="main-content" className="content">
         <div className="container">
-          <h2 id="recommendations-title" className="section-title">Recommendations</h2>
+          <div className="section-header">
+            <div>
+              <h2 id="recommendations-title" className="section-title">Recommendations</h2>
+              <p className="section-subtitle">
+                {movies.length ? `${movies.length} results ready to explore.` : "Start with a mood, genre, or short prompt."}
+              </p>
+            </div>
+            <div className="result-pill">{loading ? "Searching" : movies.length ? "Fresh picks" : "Ready"}</div>
+          </div>
 
           {loading && (
             <div className="cards-grid skeleton">
@@ -467,7 +479,7 @@ export default function App() {
 
           {!loading && movies.length === 0 && (
             <div id="empty-state" className="empty big">
-              No recommendations yet — try selecting genre/mood and tapping <b>Ask AI</b>.
+              No recommendations yet. Try selecting a genre or mood, then tap <b>Ask AI</b>.
             </div>
           )}
 
@@ -483,16 +495,19 @@ export default function App() {
                     key={`${m.title}-${idx}`}
                     className="card premium-card"
                     onClick={() => openTrailerForMovie(m)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") openTrailerForMovie(m);
+                    }}
                     tabIndex={0}
                   >
                     <div className="card-body-no-poster">
                       <div className="card-left">
                         <div className="card-title-large">{m.title}</div>
-                        <div className="card-sub muted">{m.year} • {m.genre}</div>
+                        <div className="card-sub muted">{m.year} / {m.genre}</div>
                         <div className="card-meta">
                           {m.moodTag && <Chip>{m.moodTag}</Chip>}
                           {typeof m.rating === "number" && (
-                            <span className="rating">★ {m.rating.toFixed(1)}</span>
+                            <span className="rating">Rating {m.rating.toFixed(1)}</span>
                           )}
                         </div>
                       </div>
@@ -505,7 +520,11 @@ export default function App() {
                             className="btn tiny"
                             onClick={(e) => {
                               e.stopPropagation();
-                              ytId ? openTrailerForMovie(m) : openTrailerSearch(m.title);
+                              if (ytId) {
+                                openTrailerForMovie(m);
+                              } else {
+                                openTrailerSearch(m.title);
+                              }
                             }}
                           >
                             Play Trailer
@@ -535,7 +554,7 @@ export default function App() {
                               toggleFavorite(m);
                             }}
                           >
-                            {isFav ? "♥ Saved" : "♡ Save"}
+                            {isFav ? "Saved" : "Save"}
                           </button>
 
                         </div>
@@ -571,9 +590,8 @@ export default function App() {
       />
 
       <footer id="footer" className="footer premium">
-        Built with ❤️ Using Spring Boot • Gemini API • MoodFlix
+        Built with Spring Boot / Gemini API / MoodFlix
       </footer>
     </div>
   );
 }
-
