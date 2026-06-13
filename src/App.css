@@ -268,8 +268,19 @@ select.control {
 }
 
 select option {
-  color: #101725;
-  background: #ffffff;
+  color: #f7fbff;
+  background-color: #252936;
+}
+
+select option:checked {
+  color: #081018;
+  background: #67e8f9;
+}
+
+select option:hover,
+select option:focus {
+  color: #ffffff;
+  background-color: #343a4b;
 }
 
 .hero-buttons {
