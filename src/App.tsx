@@ -229,6 +229,11 @@ export default function App() {
   const [trailerVideoId, setTrailerVideoId] = useState<string | null>(null);
   const [trailerTitle, setTrailerTitle] = useState<string | undefined>();
 
+  const yearToOptions = useMemo(() => {
+    if (typeof yearFrom !== "number") return years;
+    return years.filter((year) => year >= yearFrom);
+  }, [yearFrom, years]);
+
   const yearRangeError =
     typeof yearFrom === "number" && typeof yearTo === "number" && yearFrom > yearTo;
   const hasPrompt = Boolean(input.trim().length > 0 || genre || mood || yearFrom || yearTo);
@@ -372,7 +377,22 @@ export default function App() {
                 ))}
               </select>
 
-              <select id="select-year-from" className="control" value={yearFrom} onChange={(e) => setYearFrom(e.target.value ? Number(e.target.value) : "")}>
+              <select
+                id="select-year-from"
+                className="control"
+                value={yearFrom}
+                onChange={(e) => {
+                  const nextYearFrom = e.target.value ? Number(e.target.value) : "";
+                  setYearFrom(nextYearFrom);
+                  if (
+                    typeof nextYearFrom === "number" &&
+                    typeof yearTo === "number" &&
+                    yearTo < nextYearFrom
+                  ) {
+                    setYearTo("");
+                  }
+                }}
+              >
                 <option value="">From</option>
                 {years.map((y) => (
                   <option key={y} value={y}>{y}</option>
@@ -381,7 +401,7 @@ export default function App() {
 
               <select id="select-year-to" className="control" value={yearTo} onChange={(e) => setYearTo(e.target.value ? Number(e.target.value) : "")}>
                 <option value="">To</option>
-                {years.map((y) => (
+                {yearToOptions.map((y) => (
                   <option key={y} value={y}>{y}</option>
                 ))}
               </select>
